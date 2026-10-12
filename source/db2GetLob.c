@@ -21,6 +21,7 @@ void db2GetLob (DB2Session* session, DB2ResultColumn* column, char** value, long
   SQLLEN         ind = 0;
   SQLCHAR        buf[LOB_CHUNK_SIZE+1];
   SQLSMALLINT    fcType = (column->colType == SQL_CLOB) ? SQL_C_CHAR : SQL_C_BINARY;
+  SQLLEN         bufLen = (fcType == SQL_C_CHAR) ? LOB_CHUNK_SIZE + 1 : LOB_CHUNK_SIZE;
   int            extend = 0;
   db2Entry1();
   db2Debug2("column->colName: '%s'",column->colName);
@@ -30,8 +31,8 @@ void db2GetLob (DB2Session* session, DB2ResultColumn* column, char** value, long
   /* read the LOB in chunks */
   do {
     db2Debug2("value_len: %ld",*value_len);
-    db2Debug2("reading %d byte chunck of data",sizeof(buf));
-    rawRc = SQLGetData(session->stmtp->hsql, column->resnum, fcType, buf, sizeof(buf), &ind);
+    db2Debug2("reading %ld byte chunck of data",(long) bufLen);
+    rawRc = SQLGetData(session->stmtp->hsql, column->resnum, fcType, buf, bufLen, &ind);
     /* db2CheckErr() maps SQL_SUCCESS_WITH_INFO to SQL_SUCCESS, so the loop
      * condition below must be evaluated against rawRc, not against its
      * return value, or a multi-chunk LOB gets silently truncated to the
